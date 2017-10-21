@@ -1,4 +1,6 @@
+import imp
 import os
+import sys
 from datetime import datetime
 
 # if not os.path.isdir(opts["path"]): os.mkdir(opts["path"])
@@ -9,8 +11,10 @@ def loadOpts():
     opts = {}
     os.chdir(os.path.dirname(__file__))
     for line in open('opts.txt'):  # load options
-        line = line.strip().split(' : ')
-        opts[line[0]] = line[1]
+        line = line.strip()
+        if line:
+            line = line.strip().split(' : ')
+            opts[line[0]] = line[1]
     return opts
 
 
@@ -39,22 +43,46 @@ def sortUsernameList():  # alphebetize names
         f.write(''.join(names))
 
 
-def calcTotalTime(n):  # returns total time in seconds
-    total = 0
-    iLin, oLin = '', ''
-    prev = 'n'
-    for line in open(opts['pathTime'] + n + '.txt'):
-        line = line.strip()
-        lastIOA = prev[0]
-        currIOA = line[0]
+def impFile(libPath):
+    # sys.path.insert(0, os.path.abspath(libPath))
+    # print(os.path.abspath(libPath))
+    # print(sys.path)
+    mod_name, file_ext = os.path.splitext(os.path.split(os.path.abspath(libPath))[-1])
+    imp.load_source(mod_name, os.path.abspath(libPath))
 
-        if currIOA == 'i':
-            iLin = line[4:]
-        elif currIOA == 'o' and lastIOA != 'o' and iLin != '':
-            oLin = line[4:]
-            total = total + (datetime.strptime(oLin, opts['ioForm']) - datetime.strptime(iLin, opts['ioForm'])).total_seconds()
-        prev = line
-    return total
+
+def calcTotalTime(n):  # returns total time in seconds
+    libPath = loadOpts()["hoursLocation"]
+    if libPath == "enterLoationOf_timeclock-hours":
+        total = 0
+        iLin, oLin = '', ''
+        prev = 'n'
+        for line in open(opts['pathTime'] + n + '.txt'):
+            line = line.strip()
+            lastIOA = prev[0]
+            currIOA = line[0]
+
+            if currIOA == 'i':
+                iLin = line[4:]
+            elif currIOA == 'o' and lastIOA != 'o' and iLin != '':
+                oLin = line[4:]
+                total = total + (datetime.strptime(oLin, opts['ioForm']) - datetime.strptime(iLin, opts['ioForm'])).total_seconds()
+            prev = line
+        return total
+    else:
+        impFile(libPath)
+        return mainHours.getSecs(opts['pathTime'] + n + '.txt')
+
+
+def getTimeString(path):
+    libPath = loadOpts()["hoursLocation"]
+    if libPath == "enterLoationOf_timeclock-hours":
+        hours = str(round(calcTotalTime(path) / 60 / 60, 2))
+        return ' ' + hours + ' hours.'
+    else:
+        impFile(libPath)
+        secs = calcTotalTime(nameIO.replace(' ', ''))
+        return '\n' + mainHours.formatTime(secs)
 
 
 def mkfile(t):
