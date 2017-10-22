@@ -12,9 +12,9 @@ def loadOpts():
     os.chdir(os.path.dirname(__file__))
     for line in open('opts.txt'):  # load options
         line = line.strip()
-        if line:
+        if line and line[0] != "#":
             line = line.strip().split(' : ')
-            opts[line[0]] = line[1]
+            opts[line[0]] = line[1].split('#')[0].strip(' ')
     return opts
 
 
@@ -47,8 +47,8 @@ def impFile(libPath):
     # sys.path.insert(0, os.path.abspath(libPath))
     # print(os.path.abspath(libPath))
     # print(sys.path)
-    mod_name, file_ext = os.path.splitext(os.path.split(os.path.abspath(libPath))[-1])
-    imp.load_source(mod_name, os.path.abspath(libPath))
+    mod_name, file_ext = os.path.splitext(os.path.split(os.path.abspath(libPath + "mainHours.py"))[-1])
+    imp.load_source(mod_name, os.path.abspath(libPath + "mainHours.py"))
 
 
 def calcTotalTime(n):  # returns total time in seconds
@@ -81,7 +81,7 @@ def getTimeString(path):
         return ' ' + hours + ' hours.'
     else:
         impFile(libPath)
-        secs = calcTotalTime(nameIO.replace(' ', ''))
+        secs = calcTotalTime(path)
         return '\n' + mainHours.formatTime(secs)
 
 
